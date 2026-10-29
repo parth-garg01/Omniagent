@@ -31,3 +31,9 @@ def test_spans_logged_without_payloads(client, caplog):
     spans = [r.fields["span"] for r in caplog.records if hasattr(r, "fields")]
     assert {"retrieval", "provider"} <= set(spans)
     assert "TOP-SECRET-PAYLOAD" not in json.dumps([r.fields for r in caplog.records if hasattr(r, "fields")])
+
+
+def test_security_headers_present(client):
+    h = client.get("/api/v1/health").headers
+    assert h["x-content-type-options"] == "nosniff" and h["x-frame-options"] == "DENY"
+    assert h["referrer-policy"] == "no-referrer"
