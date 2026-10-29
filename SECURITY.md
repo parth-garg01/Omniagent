@@ -13,12 +13,14 @@ Untrusted: user input, uploaded documents, retrieved text, tool outputs, **and m
 | Role forgery | Role never read from client; self-registration is always `user` | `test_auth` |
 | Prompt injection | Retrieved text is delimited as untrusted data; tool use is validated server-side regardless of model output | `test_security_injection` |
 | Unsafe tool execution | Allowlist, schema validation, permission check, confirmation for high-risk, idempotency, timeout, output cap, bounded loop | `test_tools`, `test_security_injection` |
-| Upload abuse | Extension allowlist, signature check, size cap, page and zip-expansion limits, basename-only filenames | `test_rag` |
+| Upload abuse | Content-Length rejected up front, extension allowlist, signature check, size cap, page and zip-expansion limits, basename-only filenames | `test_rag` |
+| Resource exhaustion | Per-user sliding-window rate limits on messages and uploads (429 + Retry-After) | `test_ratelimit` |
 | Secret leakage | Log redaction, admin health omits config values, keys server-side only | `test_observability`, `test_admin` |
 
 ## Known limitations (accepted for the demo)
 - Prompt injection cannot be eliminated; controls limit blast radius rather than detect attacks.
-- Login throttling and cancellation state are in-process (single instance only).
+- Login throttling, rate limits and cancellation state are in-process (single instance only).
+- Registration returns 409 for an existing email, which allows account enumeration (login errors are uniform). Production should add email verification so the response can be uniform (#5).
 - Uploads are parsed in-process (no sandbox).
 - No TLS termination or `Secure` cookies by default; set `NOVA_COOKIE_SECURE=true` behind HTTPS.
 - Demo seed accounts share a published synthetic password; never seed outside local use.
