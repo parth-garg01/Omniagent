@@ -1,0 +1,11 @@
+{"id":"t1","message":"Where is ORD-1001?","expect_tool":"lookup_mock_order","expect_args":{"order_id":"ORD-1001"}}
+{"id":"t2","message":"what's the status of ord-2001","expect_tool":"lookup_mock_order","expect_args":{"order_id":"ORD-2001"}}
+{"id":"t3","message":"Track my order ORD-1002 please","expect_tool":"lookup_mock_order","expect_args":{"order_id":"ORD-1002"}}
+{"id":"t4","message":"I want a refund for ORD-1001","expect_tool":"request_mock_refund","expect_args":{"order_id":"ORD-1001"}}
+{"id":"t5","message":"refund ORD-2001, it arrived late","expect_tool":"request_mock_refund","expect_args":{"order_id":"ORD-2001"}}
+{"id":"t6","message":"Please open a support ticket about my login problem","expect_tool":"create_mock_support_ticket","expect_args":{}}
+{"id":"t7","message":"create a ticket for the broken screen","expect_tool":"create_mock_support_ticket","expect_args":{}}
+{"id":"t8","message":"show my account details","expect_tool":"get_mock_account_profile","expect_args":{}}
+{"id":"t9","message":"what is in my profile","expect_tool":"get_mock_account_profile","expect_args":{}}
+{"id":"n1","message":"Hello, how are you?","expect_tool":null,"expect_args":{}}
+{"id":"n2","message":"Tell me a joke","expect_tool":null,"expect_args":{}}

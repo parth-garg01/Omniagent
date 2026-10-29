@@ -1,0 +1,15 @@
+{"id":"r1","question":"How many days do I have to request a refund?","expect_file":"refund-policy.md"}
+{"id":"r2","question":"How are refunds paid out and how long does it take?","expect_file":"refund-policy.md"}
+{"id":"r3","question":"Can digital gift cards be refunded?","expect_file":"refund-policy.md"}
+{"id":"r4","question":"Are damaged items eligible for a refund?","expect_file":"refund-policy.md"}
+{"id":"r5","question":"How long does standard shipping take?","expect_file":"shipping-policy.md"}
+{"id":"r6","question":"How much does express shipping cost?","expect_file":"shipping-policy.md"}
+{"id":"r7","question":"Who pays import duties on international orders?","expect_file":"shipping-policy.md"}
+{"id":"r8","question":"How long does international shipping take?","expect_file":"shipping-policy.md"}
+{"id":"r9","question":"Do employees need multi-factor authentication?","expect_file":"security-handbook.md"}
+{"id":"r10","question":"When must a lost device be reported?","expect_file":"security-handbook.md"}
+{"id":"r11","question":"Can customer data be shared over personal email?","expect_file":"security-handbook.md"}
+{"id":"r12","question":"What approval is needed for production system access?","expect_file":"security-handbook.md"}
+{"id":"a1","question":"What is the parental leave allowance for engineers?","expect_abstain":true}
+{"id":"a2","question":"Which cafeteria vendors serve the lunch menu?","expect_abstain":true}
+{"id":"a3","question":"What is the stock ticker symbol?","expect_abstain":true}
