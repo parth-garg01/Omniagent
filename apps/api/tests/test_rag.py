@@ -111,3 +111,16 @@ def test_injection_in_document_is_treated_as_data(client):
     assert "[1]" in out["content"]
     cid = client.get("/api/v1/conversations").json()[0]["id"]
     assert len(client.get(f"/api/v1/conversations/{cid}").json()["messages"]) == 2
+
+
+def test_unrelated_words_do_not_collide():
+    """Regression for #1: 'vendor' and 'international' used to share a hash bucket."""
+    e = HashingEmbedder()
+    a, b = e.embed(["vendor", "international"])
+    assert cosine(a, b) == 0.0
+
+
+def test_unrelated_question_abstains_in_eval():
+    from nova_api.evaluation.runner import run_rag
+
+    assert run_rag()["abstention_rate"] == 1.0

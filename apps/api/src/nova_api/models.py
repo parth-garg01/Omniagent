@@ -97,7 +97,7 @@ class DocumentChunk(Base):
     document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
     chunk_index: Mapped[int] = mapped_column(Integer)
     content: Mapped[str] = mapped_column(Text)
-    embedding: Mapped[list] = mapped_column(JSON)  # pgvector column in the Postgres deployment
+    embedding: Mapped[dict] = mapped_column(JSON)  # sparse vector; a pgvector column is future work (#7)
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
