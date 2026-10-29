@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi", "uvicorn", "sqlalchemy>=2", "pydantic>=2", "pydantic-settings",
-  "argon2-cffi", "httpx", "python-multipart", "pypdf", "python-docx",
+  "argon2-cffi", "email-validator", "httpx", "python-multipart", "pypdf", "python-docx",
 ]
 
 [project.optional-dependencies]
@@ -19,3 +19,7 @@ pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
