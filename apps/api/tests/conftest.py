@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from nova_api import db
+from nova_api.auth.ratelimit import limiter
 from nova_api.auth.security import throttle
 from nova_api.main import create_app
 
@@ -10,6 +11,7 @@ from nova_api.main import create_app
 def client():
     db.init_db("sqlite://")
     throttle.reset()
+    limiter.reset()
     return TestClient(create_app())
 
 

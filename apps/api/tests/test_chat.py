@@ -102,3 +102,21 @@ def test_provider_error_is_persisted_and_normalized(client, monkeypatch):
 
 def test_unauthenticated_rejected(client):
     assert client.post("/api/v1/conversations").status_code == 401
+
+
+def test_concurrent_duplicate_client_id_is_reported_not_crashed(client):
+    """Regression for #2: losing the unique-constraint race must be treated as a retry."""
+    from nova_api import db
+    from nova_api.models import Conversation
+    from nova_api.orchestration.engine import DuplicateMessage, add_message
+
+    register_login(client)
+    cid = new_conv(client)
+    with next(db.get_db()) as s:
+        conv = s.get(Conversation, cid)
+        first = add_message(s, conv, "user", "a", client_message_id="X")
+        try:
+            add_message(s, conv, "user", "a", client_message_id="X")
+            raise AssertionError("expected DuplicateMessage")
+        except DuplicateMessage as d:
+            assert d.existing.id == first.id

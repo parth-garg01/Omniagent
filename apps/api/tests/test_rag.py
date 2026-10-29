@@ -87,7 +87,7 @@ def test_reindex_replaces_chunks_and_bumps_version(client):
 
 @pytest.mark.parametrize("name,data", [
     ("evil.exe", b"MZ"), ("fake.pdf", b"not a pdf"), ("fake.docx", b"not a zip"),
-    ("bin.txt", b"\x00\x01\x02"), ("empty.txt", b""), ("big.txt", b"x" * 2_000_001)])
+    ("bin.txt", b"\x00\x01\x02"), ("empty.txt", b""), ("small-bin.txt", b"\x00")])
 def test_upload_validation(client, name, data):
     register_login(client)
     assert upload(client, name, data).status_code == 422
@@ -111,3 +111,34 @@ def test_injection_in_document_is_treated_as_data(client):
     assert "[1]" in out["content"]
     cid = client.get("/api/v1/conversations").json()[0]["id"]
     assert len(client.get(f"/api/v1/conversations/{cid}").json()["messages"]) == 2
+
+
+def test_unrelated_words_do_not_collide():
+    """Regression for #1: 'vendor' and 'international' used to share a hash bucket."""
+    e = HashingEmbedder()
+    a, b = e.embed(["vendor", "international"])
+    assert cosine(a, b) == 0.0
+
+
+def test_unrelated_question_abstains_in_eval():
+    from nova_api.evaluation.runner import run_rag
+
+    assert run_rag()["abstention_rate"] == 1.0
+
+
+def test_oversized_upload_rejected_before_body_is_parsed(client):
+    """Regression for #4: Content-Length is checked up front (413), not after buffering."""
+    register_login(client)
+    r = client.post("/api/v1/documents", files={"file": ("big.txt", b"a" * 3_000_000)})
+    assert r.status_code == 413
+
+
+def test_upload_without_content_length_rejected(client):
+    register_login(client)
+
+    def chunks():
+        yield b"--b\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\n\r\nhi\r\n--b--\r\n"
+
+    r = client.post("/api/v1/documents", content=chunks(),
+                    headers={"content-type": "multipart/form-data; boundary=b"})
+    assert r.status_code == 411

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..audit import audit
 from ..auth.deps import require
+from ..auth.ratelimit import limit_uploads
 from ..config import get_settings
 from ..db import get_db
 from ..models import Document, DocumentChunk, User
@@ -51,6 +52,7 @@ def _manageable(db: Session, doc_id: str, user: User) -> Document:
 @router.post("", response_model=DocumentOut, status_code=201)
 async def upload(file: UploadFile = File(...), shared: bool = Form(False),
                  user: User = Depends(require("docs:own")), db: Session = Depends(get_db)):
+    limit_uploads(user.id)
     if shared and user.role != "admin":
         raise HTTPException(403, "Only admins can share documents")
     limit = get_settings().max_upload_bytes

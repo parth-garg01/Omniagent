@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from .api import admin_routes, auth_routes, chat_routes, doc_routes, tool_routes
 from .config import get_settings
@@ -22,6 +23,17 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         response.headers["X-Request-ID"] = rid
         return response
+
+    @app.middleware("http")
+    async def upload_size_guard(request: Request, call_next):
+        # Reject oversized uploads from the header, before the multipart body is read and spooled.
+        if request.method == "POST" and request.url.path == "/api/v1/documents":
+            cl = request.headers.get("content-length")
+            if cl is None:
+                return JSONResponse({"detail": "Content-Length required"}, status_code=411)
+            if not cl.isdigit() or int(cl) > get_settings().max_upload_bytes + 65536:
+                return JSONResponse({"detail": "Upload too large"}, status_code=413)
+        return await call_next(request)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):

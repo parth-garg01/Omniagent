@@ -103,7 +103,9 @@ def retrieve(db: Session, user: User, query: str, top_k: int = TOP_K) -> list[So
     ).all()
     qv = get_embedder().embed([query])[0]
     min_score = get_settings().retrieval_min_score
-    scored = sorted(((cosine(qv, c.embedding), c, d) for c, d in rows), key=lambda t: -t[0])
+    # Chunks indexed by an older dense embedder (list) are skipped until reindexed.
+    scored = sorted(((cosine(qv, c.embedding), c, d) for c, d in rows
+                     if isinstance(c.embedding, dict)), key=lambda t: -t[0])
     return [Source(document_id=d.id, filename=d.filename, chunk_index=c.chunk_index,
                    content=c.content, score=round(sc, 4), meta=c.meta or {})
             for sc, c, d in scored[:top_k] if sc >= min_score]

@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import current_user
+from ..auth.ratelimit import limit_messages
 from ..config import get_settings
 from ..db import get_db
 from ..llm import build_provider
@@ -117,6 +118,7 @@ def send_message(conversation_id: str, body: SendMessage, request: Request,
                  user: User = Depends(current_user), db: Session = Depends(get_db)):
     s = get_settings()
     conv = owned_conversation(db, conversation_id, user)
+    limit_messages(user.id)
     if len(body.content) > s.max_message_chars:
         raise HTTPException(413, f"Message exceeds {s.max_message_chars} characters")
     try:
