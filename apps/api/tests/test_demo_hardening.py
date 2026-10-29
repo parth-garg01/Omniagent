@@ -28,3 +28,16 @@ def test_seed_uses_custom_password(client, monkeypatch):
         assert login("a-very-different-pass-9").status_code == 200
     finally:
         get_settings.cache_clear()
+
+
+def test_seeded_short_password_can_log_in_but_cannot_be_registered(client, monkeypatch):
+    monkeypatch.setenv("NOVA_DEMO_PASSWORD", "abc1234")
+    get_settings.cache_clear()
+    try:
+        with next(db.get_db()) as s:
+            seed(s)
+        c = TestClient(create_app())
+        assert c.post("/api/v1/auth/login", json={"email": "alice@example.com", "password": "abc1234"}).status_code == 200
+        assert c.post("/api/v1/auth/register", json={"email": "n@example.com", "password": "abc1234"}).status_code == 422
+    finally:
+        get_settings.cache_clear()

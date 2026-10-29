@@ -21,6 +21,13 @@ class Credentials(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
+class LoginRequest(BaseModel):
+    # No password-policy length check here: policy applies when setting a password, not when
+    # verifying one (and seeded demo passwords may be shorter than the registration minimum).
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=128)
+
+
 class UserOut(BaseModel):
     id: str
     email: str
@@ -43,7 +50,7 @@ def register(body: Credentials, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=UserOut)
-def login(body: Credentials, request: Request, response: Response, db: Session = Depends(get_db)):
+def login(body: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     email = body.email.lower()
     key = f"{email}|{request.client.host if request.client else '-'}"
     if throttle.blocked(key):
