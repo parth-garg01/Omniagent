@@ -8,3 +8,4 @@ node_modules/
 dist/
 uploads/
 *.egg-info/
+apps/web/*.tsbuildinfo
