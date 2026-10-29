@@ -1,0 +1,21 @@
+[project]
+name = "nova-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi", "uvicorn", "sqlalchemy>=2", "pydantic>=2", "pydantic-settings",
+  "argon2-cffi", "httpx", "python-multipart", "pypdf", "python-docx",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
