@@ -61,6 +61,13 @@ def _traced_stream(provider, req):
         yield from provider.stream(req)
 
 
+class DuplicateMessage(Exception):
+    """Another request already persisted this client_message_id."""
+
+    def __init__(self, existing: Message):
+        self.existing = existing
+
+
 def add_message(db: Session, conv: Conversation, role: str, content: str, **kw) -> Message:
     for attempt in (0, 1):
         seq = (db.scalar(select(func.max(Message.sequence_number))
@@ -72,6 +79,12 @@ def add_message(db: Session, conv: Conversation, role: str, content: str, **kw) 
             return msg
         except IntegrityError:
             db.rollback()
+            cid = kw.get("client_message_id")
+            if cid:  # unique(conversation_id, client_message_id) lost a race: it is a retry
+                dup = db.scalar(select(Message).where(Message.conversation_id == conv.id,
+                                                      Message.client_message_id == cid))
+                if dup:
+                    raise DuplicateMessage(dup) from None
             if attempt:
                 raise
     raise RuntimeError("unreachable")
@@ -102,6 +115,21 @@ def _msg_dict(m: Message) -> dict:
             "sequence_number": m.sequence_number, "citations": m.citations}
 
 
+def _replay(db: Session, conv: Conversation, dup: Message) -> Iterator[dict]:
+    reply = db.scalar(select(Message).where(
+        Message.conversation_id == conv.id,
+        Message.sequence_number == dup.sequence_number + 1,
+        Message.role == "assistant"))
+    yield {"event": "user_message", "data": _msg_dict(dup)}
+    if reply is None or reply.status == "streaming":
+        yield {"event": "error", "data": {"code": "in_progress",
+                                           "message": "This message is still being processed"}}
+        return
+    yield {"event": "assistant_start", "data": {"id": reply.id}}
+    yield {"event": "delta", "data": {"text": reply.content}}
+    yield {"event": "done", "data": {**_msg_dict(reply), "replayed": True}}
+
+
 def run_turn(user_id: str, conversation_id: str, text: str, client_message_id: str | None,
              provider: LLMProvider, retriever: Retriever | None = None,
              tools: ToolRunner | None = None) -> Iterator[dict]:
@@ -112,25 +140,18 @@ def run_turn(user_id: str, conversation_id: str, text: str, client_message_id: s
         conv = db.get(Conversation, conversation_id)
         user = db.get(User, user_id)
 
+        dup = None
         if client_message_id:  # retry-safe: never persist the same client message twice
             dup = db.scalar(select(Message).where(Message.conversation_id == conv.id,
                                                   Message.client_message_id == client_message_id))
-            if dup:
-                reply = db.scalar(select(Message).where(
-                    Message.conversation_id == conv.id,
-                    Message.sequence_number == dup.sequence_number + 1,
-                    Message.role == "assistant"))
-                yield {"event": "user_message", "data": _msg_dict(dup)}
-                if reply is None or reply.status == "streaming":
-                    yield {"event": "error", "data": {"code": "in_progress",
-                                                       "message": "This message is still being processed"}}
-                    return
-                yield {"event": "assistant_start", "data": {"id": reply.id}}
-                yield {"event": "delta", "data": {"text": reply.content}}
-                yield {"event": "done", "data": {**_msg_dict(reply), "replayed": True}}
-                return
-
-        user_msg = add_message(db, conv, "user", text, client_message_id=client_message_id)
+        if dup is None:
+            try:
+                user_msg = add_message(db, conv, "user", text, client_message_id=client_message_id)
+            except DuplicateMessage as d:
+                dup = d.existing
+        if dup is not None:
+            yield from _replay(db, conv, dup)
+            return
         if conv.title == "New conversation":
             conv.title = text.strip().splitlines()[0][:60] or conv.title
         clear_cancel(conv.id)
