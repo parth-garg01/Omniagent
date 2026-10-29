@@ -20,6 +20,7 @@ from ..llm.interfaces import (
     UsageEvent,
 )
 from ..models import Conversation, Message, User
+from ..observability.logging import span
 from .context import build_history
 from .types import Retriever, Source, ToolRunner
 
@@ -53,6 +54,11 @@ def _take_cancel(conversation_id: str) -> bool:
 def clear_cancel(conversation_id: str) -> None:
     with _lock:
         _cancelled.discard(conversation_id)
+
+
+def _traced_stream(provider, req):
+    with span("provider", provider=provider.name, model=provider.model):
+        yield from provider.stream(req)
 
 
 def add_message(db: Session, conv: Conversation, role: str, content: str, **kw) -> Message:
@@ -130,7 +136,8 @@ def run_turn(user_id: str, conversation_id: str, text: str, client_message_id: s
         clear_cancel(conv.id)
         yield {"event": "user_message", "data": _msg_dict(user_msg)}
 
-        sources: list[Source] = retriever(db, user, text) if retriever else []
+        with span("retrieval", conversation_id=conv.id):
+            sources: list[Source] = retriever(db, user, text) if retriever else []
         history = build_history(db, conv.id, settings.context_max_messages)
         messages = history[:-1] + [LLMMessage("user", _wrap_with_sources(text, sources))]
         specs = tools.specs(user) if tools and provider.supports_tools else []
@@ -148,7 +155,7 @@ def run_turn(user_id: str, conversation_id: str, text: str, client_message_id: s
                 turn_text: list[str] = []
                 calls = []
                 req = LLMRequest(SYSTEM_PROMPT, messages, specs)
-                for ev in provider.stream(req):
+                for ev in _traced_stream(provider, req):
                     if _take_cancel(conv.id):
                         status = "cancelled"
                         break
@@ -171,7 +178,8 @@ def run_turn(user_id: str, conversation_id: str, text: str, client_message_id: s
                 messages.append(LLMMessage("assistant", "".join(turn_text), tool_calls=calls))
                 for call in calls:
                     yield {"event": "tool_start", "data": {"name": call.name}}
-                    outcome = tools.execute(db, user, conv.id, assistant.id, call)
+                    with span("tool", tool=call.name):
+                        outcome = tools.execute(db, user, conv.id, assistant.id, call)
                     yield {"event": "tool_result", "data": {
                         "name": call.name, "status": outcome.status, "summary": outcome.summary,
                         "execution_id": outcome.execution_id}}
