@@ -1,7 +1,6 @@
 """Deterministic evaluation runners. Each returns a metrics dict; nothing here calls a network."""
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -10,6 +9,7 @@ from ..db import Base, make_engine
 from ..llm import build_provider
 from ..llm.interfaces import LLMMessage, LLMRequest, ToolCallEvent
 from ..models import EvaluationRun, User
+from ..paths import repo_root
 from ..rag import service as rag_service
 from ..tools.mock_tools import build_registry
 
@@ -17,15 +17,8 @@ DATASET_VERSION = "v1"
 TOP_K = 5
 
 
-def _repo_root() -> Path:
-    for p in Path(__file__).resolve().parents:
-        if (p / "evals" / "datasets").is_dir():
-            return p
-    raise FileNotFoundError("evals/datasets not found")
-
-
 def load_dataset(name: str) -> list[dict]:
-    path = _repo_root() / "evals" / "datasets" / f"{name}_{DATASET_VERSION}.jsonl"
+    path = repo_root() / "evals" / "datasets" / f"{name}_{DATASET_VERSION}.jsonl"
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     llm_fallback_provider: str = ""  # empty = no fallback (default)
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-haiku-5-5"
+    data_root: str = ""  # dir containing data/ and evals/; auto-detected in a checkout
     session_ttl_hours: int = 24
     max_upload_bytes: int = 2_000_000
     cookie_secure: bool = False
