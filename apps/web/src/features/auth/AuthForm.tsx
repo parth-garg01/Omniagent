@@ -28,7 +28,7 @@ export function AuthForm({ onAuthed }: { onAuthed: (u: User) => void }) {
       <h1>Nova</h1>
       <p className="muted">Demo with synthetic data. Try alice@example.com / demo-password-1 after seeding.</p>
       <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-      <label>Password<input type="password" value={password} minLength={8} onChange={(e) => setPassword(e.target.value)} required /></label>
+      <label>Password<input type="password" value={password} minLength={mode === "register" ? 8 : undefined} onChange={(e) => setPassword(e.target.value)} required /></label>
       {error && <div className="error" role="alert">{error}</div>}
       <button disabled={busy}>{mode === "login" ? "Sign in" : "Create account"}</button>
       <button type="button" className="link" onClick={() => setMode(mode === "login" ? "register" : "login")}>
