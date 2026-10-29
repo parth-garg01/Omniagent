@@ -16,3 +16,15 @@ jobs:
         working-directory: apps/api
         env:
           NOVA_LLM_PROVIDER: fake  # CI never needs a paid API key
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm test
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web
