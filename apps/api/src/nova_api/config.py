@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     llm_fallback_provider: str = ""  # empty = no fallback (default)
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-haiku-5-5"
+    allow_registration: bool = True
+    demo_password: str = ""  # overrides the published seed password (use for any shared deployment)
     session_ttl_hours: int = 24
     max_upload_bytes: int = 2_000_000
     cookie_secure: bool = False

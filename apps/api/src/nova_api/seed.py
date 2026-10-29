@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .auth.security import hash_password
+from .config import get_settings
 from .models import Document, MockOrder, User
 from .rag import service as rag_service
 
@@ -24,11 +25,12 @@ def find_docs_dir() -> Path | None:
 
 
 def seed(db: Session) -> None:
+    password = get_settings().demo_password or DEMO_PASSWORD
     by_email = {}
     for email, role in USERS:
         u = db.scalar(select(User).where(User.email == email))
         if u is None:
-            u = User(email=email, password_hash=hash_password(DEMO_PASSWORD), role=role)
+            u = User(email=email, password_hash=hash_password(password), role=role)
             db.add(u)
             db.commit()
         by_email[email] = u
@@ -52,4 +54,6 @@ if __name__ == "__main__":
     dbm.init_db()
     with dbm.new_session() as s:
         seed(s)
-    print(f"Seeded demo users (password: {DEMO_PASSWORD}), orders and shared documents.")
+    custom = bool(get_settings().demo_password)
+    print("Seeded demo users (custom password from NOVA_DEMO_PASSWORD)," if custom
+          else f"Seeded demo users (password: {DEMO_PASSWORD}),", "orders and shared documents.")

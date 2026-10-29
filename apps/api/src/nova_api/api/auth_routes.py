@@ -29,6 +29,8 @@ class UserOut(BaseModel):
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(body: Credentials, db: Session = Depends(get_db)):
+    if not get_settings().allow_registration:
+        raise HTTPException(403, "Registration is disabled")
     email = body.email.lower()
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(409, "Email already registered")
