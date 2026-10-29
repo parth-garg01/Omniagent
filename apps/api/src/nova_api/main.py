@@ -2,9 +2,10 @@ import uuid
 
 from fastapi import FastAPI, Request
 
-from .api import auth_routes, chat_routes, doc_routes
+from .api import auth_routes, chat_routes, doc_routes, tool_routes
 from .config import get_settings
 from .rag import service as rag_service
+from .tools.mock_tools import build_registry
 
 
 def create_app() -> FastAPI:
@@ -24,10 +25,11 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.state.retriever = rag_service.retrieve
-    app.state.tools = None  # wired by the tools slice
+    app.state.tools = build_registry()
     app.include_router(auth_routes.router)
     app.include_router(chat_routes.router)
     app.include_router(doc_routes.router)
+    app.include_router(tool_routes.router)
     return app
 
 
