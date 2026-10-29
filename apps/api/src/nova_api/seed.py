@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .auth.security import hash_password
 from .models import Document, MockOrder, User
+from .paths import repo_root
 from .rag import service as rag_service
 
 DEMO_PASSWORD = "demo-password-1"  # synthetic, local-only
@@ -16,11 +17,11 @@ ORDERS = [("ORD-1001", "alice@example.com", "Wireless Headphones", 8999, "delive
           ("ORD-2001", "bob@example.com", "Desk Lamp", 4500, "delivered")]
 
 
-def find_docs_dir() -> Path | None:
-    for p in Path(__file__).resolve().parents:
-        if (p / "data" / "seed" / "sample-documents").is_dir():
-            return p / "data" / "seed" / "sample-documents"
-    return None
+def find_docs_dir() -> Path:
+    d = repo_root() / "data" / "seed" / "sample-documents"
+    if not d.is_dir():
+        raise FileNotFoundError(f"Seed documents not found at {d}; set NOVA_DATA_ROOT")
+    return d
 
 
 def seed(db: Session) -> None:
@@ -37,13 +38,11 @@ def seed(db: Session) -> None:
             db.add(MockOrder(id=oid, user_id=by_email[email].id, item=item,
                              amount_cents=amount, status=status))
     db.commit()
-    docs_dir = find_docs_dir()
-    if docs_dir:
-        for f in sorted(docs_dir.glob("*.md")):
-            exists = db.scalar(select(Document).where(Document.filename == f.name,
-                                                      Document.access_policy == "shared"))
-            if not exists:
-                rag_service.ingest(db, by_email["admin@example.com"], f.name, f.read_bytes(), shared=True)
+    for f in sorted(find_docs_dir().glob("*.md")):
+        exists = db.scalar(select(Document).where(Document.filename == f.name,
+                                                  Document.access_policy == "shared"))
+        if not exists:
+            rag_service.ingest(db, by_email["admin@example.com"], f.name, f.read_bytes(), shared=True)
 
 
 if __name__ == "__main__":
