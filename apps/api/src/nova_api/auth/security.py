@@ -17,7 +17,7 @@ _hasher = PasswordHasher()  # Argon2id by default
 # Permissions per role. Default-deny: anything absent is refused.
 ROLE_PERMISSIONS: dict[str, set[str]] = {
     "user": {"chat", "docs:own", "tool:read", "tool:write"},
-    "admin": {"chat", "docs:own", "docs:all", "tool:read", "tool:write", "admin"},
+    "admin": {"chat", "docs:own", "docs:all", "tool:read", "tool:write", "admin", "eval:read"},
     "evaluator": {"eval:read"},
 }
 
