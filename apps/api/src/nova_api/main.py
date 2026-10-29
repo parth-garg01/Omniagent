@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 
-from .api import auth_routes, chat_routes, doc_routes, tool_routes
+from .api import admin_routes, auth_routes, chat_routes, doc_routes, tool_routes
 from .config import get_settings
 from .observability.logging import configure_logging, request_id_var
 from .rag import service as rag_service
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_routes.router)
     app.include_router(doc_routes.router)
     app.include_router(tool_routes.router)
+    app.include_router(admin_routes.router)
     return app
 
 
