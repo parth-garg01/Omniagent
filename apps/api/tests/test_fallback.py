@@ -50,3 +50,20 @@ def test_all_fail_raises_last():
     with pytest.raises(LLMError) as e:
         collect(FallbackProvider([Fails("timeout"), Fails("rate_limit")]))
     assert e.value.code == "rate_limit"
+
+
+def test_build_provider_wraps_when_fallback_configured():
+    from nova_api.config import Settings
+    from nova_api.llm import build_provider
+
+    assert build_provider(Settings(llm_provider="fake")).name == "fake"
+    p = build_provider(Settings(llm_provider="anthropic", anthropic_api_key="k",
+                                llm_fallback_provider="fake"))
+    assert p.name == "anthropic+fake"
+
+
+def test_unknown_fallback_name_rejected():
+    from nova_api.config import Settings
+
+    with pytest.raises(ValueError):
+        Settings(llm_fallback_provider="nope")
