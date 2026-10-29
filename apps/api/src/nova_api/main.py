@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 
-from .api import auth_routes
+from .api import auth_routes, chat_routes
 from .config import get_settings
 
 
@@ -22,7 +22,10 @@ def create_app() -> FastAPI:
     def health() -> dict:
         return {"status": "ok"}
 
+    app.state.retriever = None  # wired by the RAG slice
+    app.state.tools = None  # wired by the tools slice
     app.include_router(auth_routes.router)
+    app.include_router(chat_routes.router)
     return app
 
 

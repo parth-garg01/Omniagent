@@ -42,3 +42,10 @@ def get_db() -> Iterator[Session]:
         yield db
     finally:
         db.close()
+
+
+def new_session() -> Session:
+    """Standalone session for work that outlives the request (streaming generators)."""
+    if _factory is None:
+        init_db()
+    return _factory()
