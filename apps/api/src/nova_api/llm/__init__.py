@@ -3,10 +3,10 @@ from .interfaces import LLMError, LLMProvider
 
 
 def _make(name: str, settings: Settings) -> LLMProvider:
-    if name == "anthropic":
-        from .providers.anthropic import AnthropicProvider
+    if name == "grok":
+        from .providers.grok import GrokProvider
 
-        return AnthropicProvider(settings.anthropic_api_key, settings.anthropic_model)
+        return GrokProvider(settings.grok_api_key, settings.grok_model, settings.grok_base_url)
     from .providers.fake import FakeProvider
 
     return FakeProvider()

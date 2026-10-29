@@ -102,3 +102,14 @@ def test_provider_error_is_persisted_and_normalized(client, monkeypatch):
 
 def test_unauthenticated_rejected(client):
     assert client.post("/api/v1/conversations").status_code == 401
+
+
+def test_fullwidth_citation_markers_are_recognised():
+    """Regression for #12: some models write 【1】 instead of [1]."""
+    from nova_api.orchestration.engine import _citations_used
+    from nova_api.orchestration.types import Source
+
+    src = [Source("d1", "refund-policy.md", 0, "30 days", 0.9)]
+    assert [c["n"] for c in _citations_used("It is 30 days 【1】.", src)] == [1]
+    assert [c["n"] for c in _citations_used("It is 30 days [1].", src)] == [1]
+    assert _citations_used("No marker here, and [7] is out of range", src) == []

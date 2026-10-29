@@ -10,8 +10,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./nova.db"
     llm_provider: str = "fake"
     llm_fallback_provider: str = ""  # empty = no fallback (default)
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-haiku-5-5"
+    grok_api_key: str = ""
+    # Default model id is an assumption; set NOVA_GROK_MODEL to whatever your xAI account offers.
+    grok_model: str = "grok-4"
+    grok_base_url: str = "https://api.x.ai/v1"
     session_ttl_hours: int = 24
     max_upload_bytes: int = 2_000_000
     cookie_secure: bool = False
@@ -27,7 +29,7 @@ class Settings(BaseSettings):
     @field_validator("llm_provider", "llm_fallback_provider")
     @classmethod
     def _known_provider(cls, v: str) -> str:
-        if v not in {"", "fake", "anthropic"}:
+        if v not in {"", "fake", "grok"}:
             raise ValueError(f"unknown provider: {v}")
         return v
 

@@ -18,7 +18,7 @@ def admin_health(user: User = Depends(require("admin")), db: Session = Depends(g
     s = get_settings()
     # Deliberately excludes keys, URLs and any other configuration values.
     return {"status": "ok", "database": "ok", "llm_provider": s.llm_provider,
-            "llm_key_configured": bool(s.anthropic_api_key)}
+            "llm_key_configured": bool(s.grok_api_key)}
 
 
 @router.get("/metrics")
