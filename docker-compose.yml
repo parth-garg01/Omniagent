@@ -17,7 +17,8 @@ services:
     environment:
       NOVA_DATABASE_URL: postgresql+psycopg://nova:nova-local-only@db:5432/nova
       NOVA_LLM_PROVIDER: ${NOVA_LLM_PROVIDER:-fake}
-      NOVA_ANTHROPIC_API_KEY: ${NOVA_ANTHROPIC_API_KEY:-}
+      NOVA_GROK_API_KEY: ${NOVA_GROK_API_KEY:-}
+      NOVA_GROK_MODEL: ${NOVA_GROK_MODEL:-grok-4}
     depends_on:
       db: { condition: service_healthy }
     ports: ["8000:8000"]

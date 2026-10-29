@@ -21,7 +21,7 @@ make up      # UI http://localhost:5173, API http://localhost:8000/docs
 Compose has not been run by the author of this README on this machine; treat it as untested until you verify it.
 
 ## Providers
-Default is the deterministic **fake** provider (rule-based, not a language model). To use Anthropic set `NOVA_LLM_PROVIDER=anthropic` and `NOVA_ANTHROPIC_API_KEY` in `.env`. The adapter is tested only against mocked HTTP; it has not been exercised against the live API. See `docs/extending.md`.
+Default is the deterministic **fake** provider (rule-based, not a language model). To use Grok (xAI) set `NOVA_LLM_PROVIDER=grok` and `NOVA_GROK_API_KEY` in `.env` (optionally `NOVA_GROK_MODEL`, default `grok-4` is an assumption). The adapter is tested only against mocked HTTP; it has not been exercised against the live xAI API. See `docs/extending.md`.
 
 ## Tests
 ```bash
