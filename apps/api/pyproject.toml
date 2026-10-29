@@ -9,6 +9,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+postgres = ["psycopg[binary]>=3.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
