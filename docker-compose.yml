@@ -1,0 +1,30 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: nova
+      POSTGRES_PASSWORD: nova-local-only
+      POSTGRES_DB: nova
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nova"]
+      interval: 5s
+      retries: 10
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NOVA_DATABASE_URL: postgresql+psycopg://nova:nova-local-only@db:5432/nova
+      NOVA_LLM_PROVIDER: ${NOVA_LLM_PROVIDER:-fake}
+      NOVA_ANTHROPIC_API_KEY: ${NOVA_ANTHROPIC_API_KEY:-}
+    depends_on:
+      db: { condition: service_healthy }
+    ports: ["8000:8000"]
+  web:
+    build:
+      context: apps/web
+    depends_on: [api]
+    ports: ["5173:80"]
+volumes:
+  pgdata:
