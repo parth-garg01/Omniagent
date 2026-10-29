@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
     retrieval_min_score: float = 0.2
     max_tool_iterations: int = 3
+    rate_limit_messages: int = 30
+    rate_limit_uploads: int = 10
+    rate_limit_window_seconds: int = 60
 
     @field_validator("llm_provider", "llm_fallback_provider")
     @classmethod
